@@ -3,19 +3,29 @@ package main;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Stack;
+
+import javax.script.ScriptEngineManager;
 import javax.swing.*;
 
 public class CalculatorLauncher extends JFrame implements ActionListener {
 
-    public CalculatorLauncher() {
+    private JTextField textField;
+	private String currentText = "";
+	
+	public CalculatorLauncher() {
         initializeUI();
     }
 
     private void initializeUI() {
-        JFrame frame = new JFrame("Calculator");
+        
+        ScriptEngineManager manager = new ScriptEngineManager();
+        manager.getEngineByName("js");
+    	
+    	JFrame frame = new JFrame("Calculator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JTextField textField = new JTextField();
+        
+        textField = new JTextField();
         Font bigFont = textField.getFont().deriveFont(Font.PLAIN, 25f);
         textField.setFont(bigFont);
 
@@ -62,7 +72,7 @@ public class CalculatorLauncher extends JFrame implements ActionListener {
         addComponent(buttonPanel, n1, gbc, 0, 3);
         addComponent(buttonPanel, n2, gbc, 1, 3);
         addComponent(buttonPanel, n3, gbc, 2, 3);
-        addComponent(buttonPanel, n0, gbc, 0, 4, 2, 1); // Ocupa duas colunas
+        addComponent(buttonPanel, n0, gbc, 0, 4, 2, 1);
         addComponent(buttonPanel, cb, gbc, 2, 4, 1, 1);
         addComponent(buttonPanel, sb, gbc, 3, 3, 1, 2);
         
@@ -109,10 +119,185 @@ public class CalculatorLauncher extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // Handle button clicks here
-    }
+        
+    	JButton source = (JButton) e.getSource();
+        String signals = "+-x/,";
+        char lastChar;
+        
+        if(currentText.length() <= 0) {        	
+        	lastChar = 0;
+        } else {
+        	lastChar = currentText.charAt(currentText.length() - 1);
+        	if(lastChar == ' ') {
+        		lastChar = currentText.charAt(currentText.length() - 2);
+        	}
+        };
+        
+        int exist = signals.indexOf(lastChar);
+        switch(source.getText()) {
+        	case "0": 
+        		currentText += "0";
+        		break;
+        	case "1": 
+        		currentText += "1";
+        		break;
+        	case "2": 
+        		currentText += "2";
+        		break;
+        	case "3": 
+        		currentText += "3";
+        		break;
+        	case "4": 
+        		currentText += "4";
+        		break;
+        	case "5": 
+        		currentText += "5";
+        		break;
+        	case "6": 
+        		currentText += "6";
+        		break;
+        	case "7": 
+        		currentText += "7";
+        		break;
+        	case "8": 
+        		currentText += "8";
+        		break;
+        	case "9": 
+        		currentText += "9";
+        		break;
+        	case "C": 
+        		currentText = "";
+        		break;
+        	case "B": 
+        		if(currentText.length() > 0) {
+        			if(exist >= 0 && exist <= 4) {
+        				if(lastChar != ',') {
+        					currentText = currentText.substring(0, currentText.length() -3);
+        				} else {
+        					currentText = currentText.substring(0, currentText.length() -1);
+        				}
+        			} else {
+    					currentText = currentText.substring(0, currentText.length() -1);
+        			}
+        		}
+        		break;
+        	case "+": 
+        		if(lastChar != '+') {
+	        		if(exist >= 0 && exist <= 4) {
+	        			if(lastChar != ',') {
+	        				currentText = currentText.substring(0, currentText.length() -3);
+	        			} else {
+	            			currentText = currentText.substring(0, currentText.length() -1);
+	        			}
+	        		}
+	        		currentText += " + ";
+        		}
+        		break;
+        	case "-": 
+        		if(lastChar != '-') {
+	        		if(exist >= 0 && exist <= 4) {
+	        			if(lastChar != ',') {
+	        				currentText = currentText.substring(0, currentText.length() -3);
+	        			} else {
+	            			currentText = currentText.substring(0, currentText.length() -1);
+	        			}
+	        		}
+	        		currentText += " - ";
+        		}
+        		break;
+        	case "x": 
+        		if(lastChar != 'x') {
+	        		if(exist >= 0 && exist <= 4) {
+	        			if(lastChar != ',') {
+	        				currentText = currentText.substring(0, currentText.length() -3);
+	        			} else {
+	            			currentText = currentText.substring(0, currentText.length() -1);
+	        			}
+	        		}
+	        		currentText += " x ";
+        		}
+        		break;
+        	case "/": 
+        		if(lastChar != '/') {
+	        		if(exist >= 0 && exist <= 4) {
+	        			if(lastChar != ',') {
+	        				currentText = currentText.substring(0, currentText.length() -3);
+	        			} else {
+	            			currentText = currentText.substring(0, currentText.length() -1);
+	        			}
+	        		}
+	        		currentText += " / ";
+        		}
+        		break;
+        	case ",": 
+        		if(exist >= 0 && exist <= 4 && lastChar != ',') {
+        			currentText = currentText.substring(0, currentText.length() -3);
+            		currentText += ",";
+        		} else if(lastChar != ',') {
+            		currentText += ",";
+        		}
+        		break;
+        	case "=":
 
-    public static void main(String[] args) {
-        new CalculatorLauncher();
+            	String[] tokens = currentText.split("\\s+");
+
+        		if(exist >= 0 && exist <= 4) {
+        			if(lastChar != ',') {
+        				currentText = currentText.substring(0, currentText.length() -3);
+        			} else {
+            			currentText = currentText.substring(0, currentText.length() -1);
+        			}
+        		}
+        		
+            	Stack<Double> stack = new Stack<>();
+            	double result = 0;
+            	double operand1; 
+            	double operand2;
+            	
+            	for(int loop = 0; loop < tokens.length; loop = loop + 2) {
+        			System.out.println(loop);
+            		if(loop == 0) {
+            			if (loop > 0 && tokens[loop - 1].equals("-")) {
+            		        stack.push(-Double.parseDouble(tokens[loop].replace(',', '.')));
+            		    } else {
+            		    	stack.push(Double.parseDouble(tokens[loop].replace(',', '.')));
+            		    }
+						loop = loop + 2;
+						stack.push(Double.parseDouble(tokens[loop].replace(',', '.')));
+	                    operand2 = stack.pop();
+        			} else {
+						stack.push(Double.parseDouble(tokens[loop]));
+	                    operand2 = result;
+        			}
+                    operand1 = stack.pop();
+                    result = performOperation(operand1, operand2, tokens[loop - 1]);
+                    currentText = String.format("%.2f", result);
+        		};
+        		break;
+        	
+        };
+        
+        textField.setText(currentText);
+    };
+
+    private static double performOperation(double operand1, double operand2, String operator) {
+
+    	switch (operator) {
+            case "+":
+                return operand1 + operand2;
+            case "-":
+                return operand1 - operand2;
+            case "x":
+                return operand1 * operand2;
+            case "/":
+                if (operand1 != 0 || operand2 != 0) {
+                    return operand1 / operand2;
+                } else {
+                    throw new ArithmeticException("Divisão por zero");
+                }
+            default:
+                throw new IllegalArgumentException("Operador desconhecido: " + operator);
+        }
     }
+    
 }
